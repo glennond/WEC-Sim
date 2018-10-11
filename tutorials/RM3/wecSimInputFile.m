@@ -19,15 +19,15 @@ simu.dt = 0.1; 							% Simulation time-step [s]
 % waves.T = 8;                            % Wave Period [s]
 
 % Regular Waves with CIC
-waves = waveClass('regularCIC');           % Initialize Wave Class and Specify Type                                 
-waves.H = 2.5;                          % Wave Height [m]
-waves.T = 8;                            % Wave Period [s]
+% waves = waveClass('regularCIC');           % Initialize Wave Class and Specify Type                                 
+% waves.H = 2.5;                          % Wave Height [m]
+% waves.T = 8;                            % Wave Period [s]
 
 % % Irregular Waves using PM Spectrum 
-% waves = waveClass('irregular');         % Initialize Wave Class and Specify Type
-% waves.H = 2.5;                          % Significant Wave Height [m]
-% waves.T = 8;                            % Peak Period [s]
-% waves.spectrumType = 'PM';              % Specify Wave Spectrum Type
+waves = waveClass('irregular');         % Initialize Wave Class and Specify Type
+waves.H = 2.5;                          % Significant Wave Height [m]
+waves.T = 8;                            % Peak Period [s]
+waves.spectrumType = 'PM';              % Specify Wave Spectrum Type
 
 % % Irregular Waves using JS Spectrum with Equal Energy and Seeded Phase
 % waves = waveClass('irregular');         % Initialize Wave Class and Specify Type
