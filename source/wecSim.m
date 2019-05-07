@@ -2,21 +2,21 @@
 %%
 %% Following Classes are required to be defined in the WEC-Sim input file:
 %%
-%% simu = simulationClass();                                               - To Create the Simulation Variable                                     
+%% simu = simulationClass();                                               - To Create the Simulation Variable
 %%
 %% waves = waveClass('<wave type>');                                       - To create the Wave Variable and Specify Type
 %%
-%% body(<body number>) = bodyClass('<hydrodynamics data file name>.h5');   - To initialize bodyClass:                             
-%% 
-%% constraint(<constraint number>) = constraintClass('<Constraint name>'); - To initialize constraintClass          
-%% pto(<PTO number>) = ptoClass('<PTO name>');                             - To initialize ptoClass    
-%% 
+%% body(<body number>) = bodyClass('<hydrodynamics data file name>.h5');   - To initialize bodyClass:
+%%
+%% constraint(<constraint number>) = constraintClass('<Constraint name>'); - To initialize constraintClass
+%% pto(<PTO number>) = ptoClass('<PTO name>');                             - To initialize ptoClass
+%%
 %% mooring(<mooring number>) = mooringClass('<Mooring name>');             - To initialize mooringClass (only needed when mooring blocks are used)
-%% 
+%%
 %%
 
 %% Start WEC-Sim log
-bdclose('all'); clc; diary off; close all; 
+bdclose('all'); clc; diary off; close all;
 clear body waves simu output pto constraint ptoSim mooring
 delete('*.log');
 diary('simulation.log')
@@ -25,10 +25,10 @@ diary('simulation.log')
 %% Read input file
 tic
 try fprintf('wecSimMCR Case %g\n',imcr); end
-fprintf('\nWEC-Sim Read Input File ...   \n'); 
+fprintf('\nWEC-Sim Read Input File ...   \n');
 evalc('wecSimInputFile');
-% Read Inputs for Multiple Conditions Run 
-if exist('mcr','var') == 1; 
+% Read Inputs for Multiple Conditions Run
+if exist('mcr','var') == 1
     for n=1:length(mcr.cases(1,:))
         if iscell(mcr.cases)
             eval([mcr.header{n} '= mcr.cases{imcr,n};']);
@@ -79,16 +79,16 @@ for ii = 1:simu.numWecBodies
     body(ii).checkinputs;
     %Determine if hydro data needs to be reloaded from h5 file, or if hydroData
     % was stored in memory from a previous run.
-    if exist('mcr','var') == 1 && simu.reloadH5Data == 0 && imcr > 1 
+    if exist('mcr','var') == 1 && simu.reloadH5Data == 0 && imcr > 1
         body(ii).loadHydroData(hydroData(ii));
     else
         % check for correct h5 file
         h5Info = dir(body(ii).h5File);
-        h5Info.bytes;        
+        h5Info.bytes;
         if h5Info.bytes < 1000
             error(['This is not the correct *.h5 file. Please install git-lfs to access the correct *.h5 file, or run \hydroData\bemio.m to generate a new *.h5 file'])
-        end    
-        clearvars h5Info        
+        end
+        clearvars h5Info
         body(ii).readH5File;
     end
     body(ii).bodyTotal = simu.numWecBodies;
@@ -97,17 +97,17 @@ for ii = 1:simu.numWecBodies
     else
         body(ii).lenJ = zeros(6,1);
     end
-end; clear ii 
+end; clear ii
 % PTO-Sim: read input, count
-if exist('./ptoSimInputFile.m','file') == 2 
-    ptoSimInputFile 
+if exist('./ptoSimInputFile.m','file') == 2
+    ptoSimInputFile
     ptosim.countblocks;
 end
 toc
 
 %% Pre-processing start
 tic
-fprintf('\nWEC-Sim Pre-processing ...   \n'); 
+fprintf('\nWEC-Sim Pre-processing ...   \n');
 
 %% HydroForce Pre-Processing: Wave Setup & HydroForcePre.
 % simulation setup
@@ -116,7 +116,7 @@ simu.setupSim;
 % wave setup
 waves.waveSetup(body(1).hydroData.simulation_parameters.w, body(1).hydroData.simulation_parameters.water_depth, simu.rampTime, simu.dt, simu.maxIt, simu.g, simu.endTime);
 % Check that waveDir and freq are within range of hydro data
-if  waves.waveDir <  min(body(1).hydroData.simulation_parameters.wave_dir) || waves.waveDir >  max(body(1).hydroData.simulation_parameters.wave_dir)
+if  min(waves.waveDir) <  min(body(1).hydroData.simulation_parameters.wave_dir) || max(waves.waveDir) >  max(body(1).hydroData.simulation_parameters.wave_dir)
     error('waves.waveDir outside of range of available hydro data')
 end
 if strcmp(waves.type,'etaImport')~=1 && strcmp(waves.type,'noWave')~=1 && strcmp(waves.type,'noWaveCIC')~=1
@@ -141,7 +141,7 @@ end; clear kk
 if waves.typeNum~=0 && waves.typeNum~=10
     for iBod = 1:simu.numWecBodies
         if simu.CITime > max(body(iBod).hydroData.hydro_coeffs.radiation_damping.impulse_response_fun.t)
-          error('simu.CITime is larger than the length of the IRF');
+            error('simu.CITime is larger than the length of the IRF');
         end
     end
 end
@@ -149,25 +149,25 @@ end
 % Check that the hydro data for each body is given for the same frequencies
 for ii = 1:simu.numWecBodies
     if length(body(1).hydroData.simulation_parameters.w) ~= length(body(ii).hydroData.simulation_parameters.w)
-       error('BEM simulations for each body must have the same number of frequencies')
+        error('BEM simulations for each body must have the same number of frequencies')
     else
-       for jj = 1:length(body(1).hydroData.simulation_parameters.w)
-           if body(1).hydroData.simulation_parameters.w(jj) ~= body(ii).hydroData.simulation_parameters.w(jj)
-              error('BEM simulations must be run with the same frequencies.')
-           end; clear jj;
-       end
+        for jj = 1:length(body(1).hydroData.simulation_parameters.w)
+            if body(1).hydroData.simulation_parameters.w(jj) ~= body(ii).hydroData.simulation_parameters.w(jj)
+                error('BEM simulations must be run with the same frequencies.')
+            end; clear jj;
+        end
     end
-end; clear ii; 
+end; clear ii;
 
 % check for etaImport with nlHydro
 if strcmp(waves.type,'etaImport') && simu.nlHydro == 1
     error(['Cannot run WEC-Sim with non-linear hydro (simu.nlHydro) and "etaImport" wave type'])
-end        
+end
 
 % check for etaImport with morrisonElement
 if strcmp(waves.type,'etaImport') && simu.morrisonElement == 1
     error(['Cannot run WEC-Sim with Morrison Element (simu.morrisonElement) and "etaImport" wave type'])
-end    
+end
 
 
 %% Set variant subsystems options
@@ -203,9 +203,11 @@ sv_noB2B=Simulink.Variant('B2B==0');
 sv_B2B=Simulink.Variant('B2B==1');
 % nonHydroBody
 for ii=1:length(body(1,:))
-    eval(['nhbody_' num2str(ii) ' = body(ii).nhBody;']);
-    eval(['sv_b' num2str(ii) '_hydroBody = Simulink.Variant(''nhbody_' num2str(ii) '==0'');']);
-    eval(['sv_b' num2str(ii) '_nonHydroBody = Simulink.Variant(''nhbody_' num2str(ii) '==1'');']);
+    eval(['nhbody_' num2str(ii) ' = body(ii).nhBody;'])
+    eval(['sv_b' num2str(ii) '_hydroBody = Simulink.Variant(''nhbody_' num2str(ii) '==0'');'])
+    eval(['sv_b' num2str(ii) '_nonHydroBody = Simulink.Variant(''nhbody_' num2str(ii) '==1'');'])
+%    eval(['sv_b' num2str(ii) '_flexBody = Simulink.Variant(''nhbody_' num2str(ii) '==2'');'])
+%    eval(['sv_b' num2str(ii) '_rigidBody = Simulink.Variant(''nhbody_' num2str(ii) '==0'');'])
 end; clear ii
 
 
@@ -244,20 +246,21 @@ tic
 fprintf('\nSimulating the WEC device defined in the SimMechanics model %s...   \n',simu.simMechanicsFile)
 % Modify some stuff for simulation
 for iBod = 1:simu.numWecBodies
-    body(iBod).adjustMassMatrix(simu.adjMassWeightFun,simu.b2b); 
+    body(iBod).adjustMassMatrix(simu.adjMassWeightFun,simu.b2b);
 end; clear iBod
 warning('off','Simulink:blocks:TDelayTimeTooSmall');
 warning('off','Simulink:blocks:BusSelDupBusCreatorSigNames');
 warning('off','MATLAB:loadlibrary:FunctionNotFound');
 warning('off','MATLAB:loadlibrary:parsewarnings');
 warning('off','Simulink:blocks:DivideByZero');
+warning('off','sm:sli:setup:compile:SteadyStateStartNotSupported')
 set_param(0, 'ErrorIfLoadNewModel', 'off')
 % run simulation
 simu.loadSimMechModel(simu.simMechanicsFile);
-sim(simu.simMechanicsFile);
+sim(simu.simMechanicsFile, [], simset('SrcWorkspace','parent'));
 % Restore modified stuff
 clear nlHydro sv_linearHydro sv_nonlinearHydro ssCalc radiation_option sv_convolution sv_stateSpace sv_constantCoeff typeNum B2B sv_B2B sv_noB2B;
-clear nhbod* sv_b* sv_noWave sv_regularWaves sv_irregularWaves sv_udfWaves sv_instFS sv_meanFS sv_MEOn sv_MEOff morrisonElement;
+clear nhbod* sv_b* sv_noWave sv_regularWaves sv_irregularWaves sv_udfWaves sv_instFS sv_meanFS sv_MEOn sv_MEOff morrisonElement flexHydrobody_*;
 toc
 
 tic
@@ -274,11 +277,10 @@ end
 paraViewVisualization
 
 %% Save files
-clear ans table tout; 
+clear ans table tout;
 toc
-diary off 
+diary off
 movefile('simulation.log',simu.logFile)
 if simu.saveMat==1
-    save(simu.caseFile)
+    save(simu.caseFile,'-v7.3')
 end
-

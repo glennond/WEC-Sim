@@ -15,50 +15,186 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 classdef waveClass<handle
-    properties (SetAccess = 'public', GetAccess = 'public')%input file
-        type                        = 'NOT DEFINED'                         % Wave types (Default = 'NOT DEFINED'): 'noWave', 'noWaveCIC', 'regular', 'regularCIC', 'irregular', 'spectrumImport', and 'etaImport'
-        T                           = 'NOT DEFINED'                         % [s] Wave period (regular waves), peak period (irregular waves), period of BEM data used for hydrodynamic coefficients ('noWave') (Default = 'NOT DEFINED')
-        H                           = 'NOT DEFINED'                         % [m] Wave height (regular waves) or significant wave height (irregular waves) (Default = 'NOT DEFINED')
-        spectrumType                = 'NOT DEFINED'                         % Wave spectrum types (Default = 'NOT DEFINED'): 'PM', 'BS', and 'JS'
-        gamma                       = 3.3                                   % Only used for 'JS' spectrum type to define gamma (Default = 3.3)
-        phaseSeed                   = 0;                                    % Only used for irregular waves (Default = 0); if equals to 1,2,3,...,etc, the waves phase is seeded.
-        spectrumDataFile            = 'NOT DEFINED'                         % Data file that contains the spectrum data file (Default = 'NOT DEFINED')
-        etaDataFile                 = 'NOT DEFINED'                         % Data file that contains the times-series data file (Default = 'NOT DEFINED')
-        freqRange                   = [];                                   % Min and max frequency for irregular waves. 2x1 vector, rad/s, (default = frequency range in BEM data)
-        numFreq                     = [];                                   % Number of frequencies used, varies depending on method: Traditional = 1000, EqualEnergy = 500 or 'Imported' 
-        waveDir                     = 0                                     % [deg] Incident wave direction (Default = 0)
-        waveSpread                  = 1;                                   % Wave Spread probability associated with the wave direction
-        viz                         = struct(...                            % Structure defining visualization options
-            'numPointsX', 50, ...              % Visualization number of points in x direction.
-            'numPointsY', 50)                  % Visualization number of points in y direction.
-        statisticsDataLoad          = [];                                   % File name to load wave statistics data for wecSimMCR
-        freqDisc                    = 'EqualEnergy'                         % Method of frequency discretization for irregular waves. Options for this variable are 'EqualEnergy' or 'Traditional'. (default = 'EqualEnergy').
-        wavegauge1loc               = 0;                                    % [m] Wave gauge 1 location assumed to be along the x-axis
-        wavegauge2loc               = 0;                                    % [m] Wave gauge 2 location assumed to be along the x-axis
-        wavegauge3loc               = 0;                                    % [m] Wave gauge 3 location assumed to be along the x-axis
+    
+    % The following properties can be set by the user in the input file
+    properties (SetAccess = public, GetAccess = public)%input file
+        
+        % type - String defining the type of waves to be generated.
+        %   Can be one of: 'noWave', 'noWaveCIC', 'regular', 'regularCIC',
+        %   'irregular', 'spectrumImport', and 'etaImport' 
+        %   (Default = 'NOT DEFINED').
+        type = 'NOT DEFINED';
+        
+        % T - [s] Wave period, peak wave period or BEM period.
+        %   Wave period (regular waves), peak period (irregular waves), or
+        %   period of BEM data used for hydrodynamic coefficients
+        %   ('noWave') 
+        %   (Default = 'NOT DEFINED').        
+        T = 'NOT DEFINED';
+        
+        % H - % [m] Wave height or significant wave height for irregular
+        %   Wave height (regular waves) or significant wave height
+        %   (irregular waves) 
+        %   (Default = 'NOT DEFINED').        
+        H = 'NOT DEFINED';
+
+        % spectrumType -  String containing the wave spectrum type
+        %   Can be one of : 'PM', 'BS', and 'JS' 
+        %   (Default = 'NOT DEFINED').        
+        spectrumType = 'NOT DEFINED'; 
+        
+        % gamma - Only used for 'JS' spectrum type to define gamma 
+        %   (Default = 3.3)
+        gamma = 3.3
+        
+         % phaseSeed - Only used for irregular waves 
+         %  if equal to 1,2,3,...,etc, the waves phase is seeded.
+         %  (Default = 0)
+        phaseSeed = 0;
+        
+        % spectrumDataFile - Data file that contains the spectrum data file
+        %   (Default = 'NOT DEFINED')
+        spectrumDataFile = 'NOT DEFINED';
+        
+        % etaDataFile - Data file that contains the times-series data file
+        %   (Default = 'NOT DEFINED')
+        etaDataFile = 'NOT DEFINED';
+        
+        % freqRange - Min and max frequency for irregular waves. 
+        %   2x1 vector, rad/s, (default = frequency range in BEM data)
+        %   (Default = [])
+        freqRange = [];
+        
+        % numFreq - of interpolated wave frequencies 
+        %   Number of frequencies used, varies depending on method:
+        %   Traditional = 1000, EqualEnergy = 500 or 'Imported'
+        %   (Default = [])
+        numFreq = []; 
+
+        % waveDir - [deg] Incident wave direction(s)
+        %   Should be defined as a column vector for more than one wave direction        
+        %   (Default = 0)
+        waveDir = 0; 
+        
+        % waveSpread - Wave Spread probability associated with wave direction(s)
+        %   Should be defined as a column vector for more than one wave direction
+        %   (Default = 1)
+        waveSpread = 1;
+        
+        % viz - Structure defining visualization options
+        %   Should be a structure containing the fields 'numPointsX' and
+        %   'numPointsY'. numPointsX is the number of visualization points
+        %   in x direction, and numPointsY the number of visualization points
+        %   in y direction
+        viz = struct( 'numPointsX', 50, ...
+                      'numPointsY', 50 ); 
+        
+        % statisticsDataLoad - File name from which to load wave statistics data
+        %   (Default = [])
+        statisticsDataLoad = []; 
+        
+        % freqDisc - Method of frequency discretization for irregular waves. 
+        %   Options for this variable are 'EqualEnergy' or 'Traditional'.
+        %   (Default = 'EqualEnergy').
+        freqDisc = 'EqualEnergy';
+        
+        % wavegauge1loc - [m] Wave gauge 1 [x,y] location
+        %   (Default = [0,0]).
+        wavegauge1loc = [0,0];
+        
+        % wavegauge2loc - [m] Wave gauge 2 [x,y] location
+        %   (Default = [0,0]).
+        wavegauge2loc = [0,0]; 
+        
+        % wavegauge3loc - [m] Wave gauge 3 [x,y] location
+        %   (Default = [0,0]).
+        wavegauge3loc = [0,0]; 
+        
     end
     
-    properties (SetAccess = 'private', GetAccess = 'public')%internal
-        typeNum                     = []                                    % Number to represent different type of waves
-        bemFreq                     = []                                    % Number of wave frequencies from BEM
-        waterDepth                  = []                                    % [m] Water depth (from BEM)
-        deepWaterWave               = []                                    % Deep water, depends on input from WAMIT, NEMOH and AQWA
-        waveAmpTime                 = []                                    % [m] Wave elevation time history
-        waveAmpTime1                = []                                    % [m] Wave elevation time history at a wave gauge 1 location specified by user
-        waveAmpTime2                = []                                    % [m] Wave elevation time history at a wave gauge 2 location specified by user
-        waveAmpTime3                = []                                    % [m] Wave elevation time history at a wave gauge 3 location specified by user
-        A                           = []                                    % [m] Wave amplitude for regular waves or 2*(wave spectrum vector) for irregular waves
-        w                           = []                                    % [rad/s] Wave frequency (regular waves) or wave frequency vector (irregular waves)
-        phase                       = 0;                                    % [rad] Wave phase (only used for irregular waves)
-        dw                          = 0;                                    % [rad/s] Frequency spacing for irregular waves.
-        k                           = []                                    % [rad/m] Wave number
-        Sf                          = [];                                   % Wave Spectrum [m^2-s/rad]
+    % The following properties are for internal use
+    properties (SetAccess = private, GetAccess = public)
+        
+        % typeNum - Number to represent different type of waves
+        typeNum = []; 
+        
+        % bemFreq - Number of wave frequencies from BEM
+        bemFreq = []; 
+        
+        % waterDepth - [m] Water depth (from BEM)
+        waterDepth = []; 
+        
+        % deepWaterWave - Deep water or not, depending on input from WAMIT, NEMOH and AQWA
+        deepWaterWave = [];
+        
+        % waveAmpTime - [m] Wave elevation time history
+        waveAmpTime = []; 
+        
+        % waveAmpTime1 - [m] Wave elevation time history at a wave gauge 1 location specified by user
+        waveAmpTime1 = [];
+        
+        % waveAmpTime2 - [m] Wave elevation time history at a wave gauge 2 location specified by user
+        waveAmpTime2 = [];
+        
+        % waveAmpTime3 - [m] Wave elevation time history at a wave gauge 3 location specified by user
+        waveAmpTime3 = [];
+        
+        % A - [m] Wave amplitude for regular waves or 2*(wave spectrum vector) for irregular waves
+        A = []; 
+        
+        % w - [rad/s] Wave frequency (regular waves) or wave frequency vector (irregular waves)
+        w = []; 
+        
+        % phase - [rad] Wave phase (only used for irregular waves)
+        phase = 0; 
+        
+        % dw - [rad] Frequency spacing for irregular waves.
+        dw = 0; 
+        
+        % k - Wave Number
+        k = []; 
+        
+        % S - Wave Spectrum [m^2-s/rad] for 'Traditional'
+        S = [];
+        
     end
     
-    methods (Access = 'public')
+    methods (Access = public)
         function obj = waveClass(type)
-            % Initilization function
-            % Set wave type and type number
+            % waveClass constructor
+            %
+            % Syntax
+            %
+            % obj = waveClass (type)
+            % 
+            % Input
+            %
+            %  type - string containing the type of wave simulation to be
+            %    generated, the possible values are
+            %
+            %    'noWave' : no waves
+            %
+            %    'noWaveCIC' : No waves but with the Convolution Integral 
+            %      Calculation  to calculate radiation effects
+            %
+            %    'regular' : Regular waves
+            %
+            %    'regularCIC' : Regular waves with Convolution Integral 
+            %      Calculation to calculate radiation effects
+            %
+            %    'irregular' : Irregular Waves
+            %
+            %    'spectrumImport' : Irregular Waves with predefined phase
+            %
+            %    'etaImport' : Irregular Waves with predefined elevation
+            %
+            %    
+            % Output
+            %
+            %  obj - waveClass object
+            %
+            %
+            
             obj.type = type;
             switch obj.type
                 case {'noWave'}        % No Waves with Constant Hydrodynamic Coefficients
@@ -94,16 +230,16 @@ classdef waveClass<handle
         
         function plotSpectrum(obj)
             % Plot wave spetrum
-            m0 = trapz(obj.w,obj.Sf);
+            m0 = trapz(obj.w,obj.S);
             HsTest = 4*sqrt(m0);
-            [~,I] = max(abs(obj.Sf));
+            [~,I] = max(abs(obj.S));
             wp = obj.w(I);
             TpTest = 2*pi/wp;
             
             figure
-            plot(obj.w,obj.Sf,'s-')
+            plot(obj.w,obj.S,'s-')
             hold on
-            line([wp,wp],[0,max(obj.Sf)],'Color','k')
+            line([wp,wp],[0,max(obj.S)],'Color','k')
             xlim([0 max(obj.w)])
             title([obj.spectrumType, ' Spectrum, T_p= ' num2str(TpTest) ' [s], '  'H_m_0= ' num2str(HsTest), ' [m]'])
             if obj.spectrumType == 'JS'
@@ -284,19 +420,7 @@ classdef waveClass<handle
                 filename = ['vtk' filesep 'waves' filesep 'waves_' num2str(it) '.vtp'];
                 fid = fopen(filename, 'w');
                 % calculate wave elevation
-                switch obj.type
-                    case{'noWave','noWaveCIC','etaImport'}
-                        Z = zeros(size(X));
-                    case{'regular','regularCIC'}
-                        Xt = X*cos(obj.waveDir*pi/180) + Y*sin(obj.waveDir*pi/180);
-                        Z = obj.A * cos(-1 * obj.k * Xt  +  obj.w * t(it));
-                    case{'irregular','spectrumImport'}
-                        Z = zeros(size(X));
-                        Xt = X*cos(obj.waveDir*pi/180) + Y*sin(obj.waveDir*pi/180);
-                        for iw = 1:length(obj.w)
-                            Z = Z + sqrt(obj.A(iw).*obj.dw(iw)) * cos(-1*obj.k(iw)*Xt + obj.w(iw)*t(it) + obj.phase(iw));
-                        end
-                end
+                Z = waveElevationGrid (obj, t(it), X, Y);
                 % write header
                 fprintf(fid, '<?xml version="1.0"?>\n');
                 fprintf(fid, ['<!-- WEC-Sim Visualization using ParaView -->\n']);
@@ -350,6 +474,49 @@ classdef waveClass<handle
             end; clear it
             clear  numPoints numVertex numFace x y lx ly X Y Z fid filename p1 p2 p3 p4
         end
+        
+        function Z = waveElevationGrid (obj, t, X, Y)
+            % calculates wave elevation on a grid at a given time
+            %
+            % Syntax
+            %
+            % Z = waveElevationGrid (obj, t, X, Y)
+            %
+            % Input
+            %
+            %  obj - waveClass object
+            %
+            %  t - the current time
+            %
+            %  X - (m x n) matrix of X coordinates at which to calculate
+            %    the wave elevation
+            %
+            %  Y - (m x n) matrix of Y coordinates at which to calculate
+            %    the wave elevation
+            %
+            % Output
+            %
+            %  Z - (m x n) matrix of Z coordinates of the wave elevation
+            %
+            %
+            %
+            % See Also: waveClass.write_paraview_vtp
+            %
+            
+            switch obj.type                
+                case {'noWave','noWaveCIC','etaImport'}                    
+                    Z = zeros (size (X));                    
+                case {'regular', 'regularCIC'}                    
+                    Xt = X*cos (obj.waveDir*pi/180) + Y * sin(obj.waveDir*pi/180);                    
+                    Z = obj.A * cos(-1 * obj.k * Xt  +  obj.w * t);                    
+                case {'irregular', 'spectrumImport'}                    
+                    Z = zeros (size (X));                    
+                    Xt = X.*cos (obj.waveDir*pi/180) + Y.*sin (obj.waveDir*pi/180);                    
+                    for iw = 1:length (obj.w)                        
+                        Z = Z + sqrt (obj.A(iw)*obj.dw(iw)) * cos ( -1*obj.k(iw)*Xt + obj.w(iw)*t + obj.phase(iw) );                        
+                    end                    
+            end            
+        end        
     end
     
     methods (Access = 'protected')
@@ -433,11 +600,11 @@ classdef waveClass<handle
                     obj.waveAmpTime(i,1)    = t;
                     obj.waveAmpTime(i,2)    = obj.A*cos(obj.w*t);
                     obj.waveAmpTime1(i,1)   = t;
-                    obj.waveAmpTime1(i,2)   = obj.A*cos(obj.w*t-obj.k*obj.wavegauge1loc);
+                    obj.waveAmpTime1(i,2)   = obj.A*cos(obj.w*t-obj.k*(obj.wavegauge1loc(1).*cos(obj.waveDir*pi/180) + obj.wavegauge1loc(2).*sin(obj.waveDir*pi/180)));
                     obj.waveAmpTime2(i,1)   = t;
-                    obj.waveAmpTime2(i,2)   = obj.A*cos(obj.w*t-obj.k*obj.wavegauge2loc);
+                    obj.waveAmpTime2(i,2)   = obj.A*cos(obj.w*t-obj.k*(obj.wavegauge2loc(1).*cos(obj.waveDir*pi/180) + obj.wavegauge2loc(2).*sin(obj.waveDir*pi/180)));
                     obj.waveAmpTime3(i,1)   = t;
-                    obj.waveAmpTime3(i,2)   = obj.A*cos(obj.w*t-obj.k*obj.wavegauge3loc);
+                    obj.waveAmpTime3(i,2)   = obj.A*cos(obj.w*t-obj.k*(obj.wavegauge3loc(1).*cos(obj.waveDir*pi/180) + obj.wavegauge3loc(2).*sin(obj.waveDir*pi/180)));
                 end
             else
                 for i=1:maxRampIT
@@ -445,22 +612,22 @@ classdef waveClass<handle
                     obj.waveAmpTime(i,1)    = t;
                     obj.waveAmpTime(i,2)    = obj.A*cos(obj.w*t)*(1+cos(pi+pi*(i-1)/maxRampIT))/2;
                     obj.waveAmpTime1(i,1)   = t;
-                    obj.waveAmpTime1(i,2)   = obj.A*cos(obj.w*t-obj.k*obj.wavegauge1loc)*(1+cos(pi+pi*(i-1)/maxRampIT))/2;
+                    obj.waveAmpTime1(i,2)   = obj.A*cos(obj.w*t-obj.k*(obj.wavegauge1loc(1).*cos(obj.waveDir*pi/180) + obj.wavegauge1loc(2).*sin(obj.waveDir*pi/180)))*(1+cos(pi+pi*(i-1)/maxRampIT))/2;
                     obj.waveAmpTime2(i,1)   = t;
-                    obj.waveAmpTime2(i,2)   = obj.A*cos(obj.w*t-obj.k*obj.wavegauge2loc)*(1+cos(pi+pi*(i-1)/maxRampIT))/2;
+                    obj.waveAmpTime2(i,2)   = obj.A*cos(obj.w*t-obj.k*(obj.wavegauge2loc(1).*cos(obj.waveDir*pi/180) + obj.wavegauge2loc(2).*sin(obj.waveDir*pi/180)))*(1+cos(pi+pi*(i-1)/maxRampIT))/2;
                     obj.waveAmpTime3(i,1)   = t;
-                    obj.waveAmpTime3(i,2)   = obj.A*cos(obj.w*t-obj.k*obj.wavegauge3loc)*(1+cos(pi+pi*(i-1)/maxRampIT))/2;
+                    obj.waveAmpTime3(i,2)   = obj.A*cos(obj.w*t-obj.k*(obj.wavegauge3loc(1).*cos(obj.waveDir*pi/180) + obj.wavegauge3loc(2).*sin(obj.waveDir*pi/180)))*(1+cos(pi+pi*(i-1)/maxRampIT))/2;
                 end
                 for i=maxRampIT+1:maxIt+1
                     t = (i-1)*dt;
                     obj.waveAmpTime(i,1)    = t;
                     obj.waveAmpTime(i,2)    = obj.A*cos(obj.w*t);
                     obj.waveAmpTime1(i,1)   = t;
-                    obj.waveAmpTime1(i,2)   = obj.A*cos(obj.w*t-obj.k*obj.wavegauge1loc);
+                    obj.waveAmpTime1(i,2)   = obj.A*cos(obj.w*t-obj.k*(obj.wavegauge1loc(1).*cos(obj.waveDir*pi/180) + obj.wavegauge1loc(2).*sin(obj.waveDir*pi/180)));
                     obj.waveAmpTime2(i,1)   = t;
-                    obj.waveAmpTime2(i,2)   = obj.A*cos(obj.w*t-obj.k*obj.wavegauge2loc);
+                    obj.waveAmpTime2(i,2)   = obj.A*cos(obj.w*t-obj.k*(obj.wavegauge2loc(1).*cos(obj.waveDir*pi/180) + obj.wavegauge2loc(2).*sin(obj.waveDir*pi/180)));
                     obj.waveAmpTime3(i,1)   = t;
-                    obj.waveAmpTime3(i,2)   = obj.A*cos(obj.w*t-obj.k*obj.wavegauge3loc);
+                    obj.waveAmpTime3(i,2)   = obj.A*cos(obj.w*t-obj.k*(obj.wavegauge3loc(1).*cos(obj.waveDir*pi/180) + obj.wavegauge3loc(2).*sin(obj.waveDir*pi/180)));
                 end
             end
         end
@@ -474,16 +641,15 @@ classdef waveClass<handle
             switch obj.spectrumType
                 case 'PM' % Pierson-Moskowitz Spectrum from Tucker and Pitt (2001)
                     B_PM = (5/4)*(1/Tp)^(4);
-                    A_PM = g^2*(2*pi)^(-4);
-                    S_f_temp = (A_PM*freq.^(-5).*exp(-B_PM*freq.^(-4)));
-                    alpha_PM = Hs^(2)/16/trapz(freq,S_f_temp);
-                    obj.Sf = alpha_PM*S_f_temp./(2*pi);                              % Wave Spectrum [m^2-s/rad] for 'Traditional'
-                    S_f = obj.Sf*2*pi;                                          % Wave Spectrum [m^2-s]
+                    A_PM = 0.0081*g^2*(2*pi)^(-4);
+                    S_f  = (A_PM*freq.^(-5).*exp(-B_PM*freq.^(-4)));            % Wave Spectrum [m^2-s] for 'EqualEnergy'
+                    obj.S = S_f./(2*pi);                                        % Wave Spectrum [m^2-s/rad] for 'Traditional'
+                    S_f = obj.S*2*pi;                                          
                 case 'BS' % Bretschneider Sprectrum from Tucker and Pitt (2001)
                     B_BS = (1.057/Tp)^4;
                     A_BS = B_BS*(Hs/2)^2;
-                    S_f = (A_BS*freq.^(-5).*exp(-B_BS*freq.^(-4)));             % Wave Spectrum [m^2-s]
-                    obj.Sf = S_f./(2*pi);                                       % Wave Spectrum [m^2-s/rad] for 'Traditional'
+                    S_f = (A_BS*freq.^(-5).*exp(-B_BS*freq.^(-4)));             % Wave Spectrum [m^2-s] for 'EqualEnergy'
+                    obj.S = S_f./(2*pi);                                        % Wave Spectrum [m^2-s/rad] for 'Traditional'
                 case 'JS' % JONSWAP Spectrum from Hasselmann et. al (1973)
                     [r,~] = size(freq);
                     if r == 1; freq = sort(freq)';
@@ -495,18 +661,18 @@ classdef waveClass<handle
                     Gf = zeros(size(freq));
                     Gf(lind) = obj.gamma.^exp(-(freq(lind)-fp).^2/(2*siga^2*fp^2));
                     Gf(hind) = obj.gamma.^exp(-(freq(hind)-fp).^2/(2*sigb^2*fp^2));
-                    Sf_temp = g^2*(2*pi)^(-4)*freq.^(-5).*exp(-(5/4).*(freq/fp).^(-4));
-                    alpha_JS = Hs^(2)/16/trapz(freq,Sf_temp.*Gf);
-                    S_f = alpha_JS*Sf_temp.*Gf;                                 % Wave Spectrum [m^2-s]
-                    obj.Sf = S_f./(2*pi);                                       % Wave Spectrum [m^2-s/rad] for 'Traditional'
+                    S_temp = g^2*(2*pi)^(-4)*freq.^(-5).*exp(-(5/4).*(freq/fp).^(-4));
+                    alpha_JS = Hs^(2)/16/trapz(freq,S_temp.*Gf);
+                    S_f = alpha_JS*S_temp.*Gf;                                 % Wave Spectrum [m^2-s] for 'EqualEnergy'
+                    obj.S = S_f./(2*pi);                                       % Wave Spectrum [m^2-s/rad] for 'Traditional'
                     freq = freq';
                 case 'spectrumImport' % Imported Wave Spectrum
                     data = importdata(obj.spectrumDataFile);
                     freq_data = data(:,1);
-                    Sf_data = data(:,2);
+                    S_data = data(:,2);
                     freq_loc = freq_data>=min(obj.bemFreq)/2/pi & freq_data<=max(obj.bemFreq)/2/pi;
-                    S_f = Sf_data(freq_loc);
-                    obj.Sf = S_f./(2*pi);                                       % Wave Spectrum [m^2-s/rad] for 'Traditional'
+                    S_f = S_data(freq_loc);                                    % Wave Spectrum [m^2-s] for 'EqualEnergy'
+                    obj.S = S_f./(2*pi);                                       % Wave Spectrum [m^2-s/rad] for 'Traditional'
                     fprintf('\t"spectrumImport" uses the number of imported wave frequencies (not "Traditional" or "EqualEnergy")\n')
             end
             switch obj.freqDisc
@@ -533,12 +699,12 @@ classdef waveClass<handle
                     obj.w = 2*pi*freq(wn(2:end-1))';
                     obj.dw = [obj.w(1)-2*pi*freq(wn(1)); diff(obj.w)];
                     if strcmp(obj.spectrumType,'JS') ==1
-                        obj.Sf = obj.Sf(wn(2:end-1));                           % Wave Spectrum [m^2-s/rad] for 'EqualEnergy'
+                        obj.S = obj.S(wn(2:end-1));                           % Wave Spectrum [m^2-s/rad]
                     else
-                        obj.Sf = obj.Sf(wn(2:end-1))';                          % Wave Spectrum [m^2-s/rad] for 'EqualEnergy'
+                        obj.S = obj.S(wn(2:end-1))';                          % Wave Spectrum [m^2-s/rad] 
                     end
             end
-            obj.A = 2 * obj.Sf;                                                 % Wave Amplitude [m]
+            obj.A = 2 * obj.S;                                                 % Wave Amplitude [m]
         end
         
         function waveElevIrreg(obj,rampTime,dt,maxIt,df)
@@ -554,10 +720,10 @@ classdef waveClass<handle
                     for idir=1:length(obj.waveDir)
                         t       = (i-1)*dt;
                         tmp     = sqrt(obj.A.*df*obj.waveSpread(idir));
-                        tmp1    = tmp.*real(exp(sqrt(-1).*(obj.w.*t + obj.phase(idir,:))));
-                        tmp11   = tmp.*real(exp(sqrt(-1).*(obj.w.*t - obj.k*obj.wavegauge1loc + obj.phase(idir,:))));
-                        tmp12   = tmp.*real(exp(sqrt(-1).*(obj.w.*t - obj.k*obj.wavegauge2loc + obj.phase(idir,:))));
-                        tmp13   = tmp.*real(exp(sqrt(-1).*(obj.w.*t - obj.k*obj.wavegauge3loc + obj.phase(idir,:))));
+                        tmp1    = tmp.*real(exp(sqrt(-1).*(obj.w.*t + obj.phase(:,idir))));
+                        tmp11   = tmp.*real(exp(sqrt(-1).*(obj.w.*t - obj.k*(obj.wavegauge1loc(1).*cos(obj.waveDir(idir)*pi/180) + obj.wavegauge1loc(2).*sin(obj.waveDir(idir)*pi/180)) + obj.phase(:,idir))));
+                        tmp12   = tmp.*real(exp(sqrt(-1).*(obj.w.*t - obj.k*(obj.wavegauge2loc(1).*cos(obj.waveDir(idir)*pi/180) + obj.wavegauge2loc(2).*sin(obj.waveDir(idir)*pi/180)) + obj.phase(:,idir))));
+                        tmp13   = tmp.*real(exp(sqrt(-1).*(obj.w.*t - obj.k*(obj.wavegauge3loc(1).*cos(obj.waveDir(idir)*pi/180) + obj.wavegauge3loc(2).*sin(obj.waveDir(idir)*pi/180)) + obj.phase(:,idir))));
                         obj.waveAmpTime(i,1)    = t;
                         obj.waveAmpTime(i,2)    = obj.waveAmpTime(i,2) + sum(tmp1);
                         obj.waveAmpTime1(i,1)   = t;
@@ -574,9 +740,9 @@ classdef waveClass<handle
                         t = (i-1)*dt;
                         tmp=sqrt(obj.A.*df*obj.waveSpread(idir));
                         tmp1    = tmp.*real(exp(sqrt(-1).*(obj.w.*t + obj.phase(:,idir))));
-                        tmp11   = tmp.*real(exp(sqrt(-1).*(obj.w.*t - obj.k*obj.wavegauge1loc + obj.phase(:,idir))));
-                        tmp12   = tmp.*real(exp(sqrt(-1).*(obj.w.*t - obj.k*obj.wavegauge2loc + obj.phase(:,idir))));
-                        tmp13   = tmp.*real(exp(sqrt(-1).*(obj.w.*t - obj.k*obj.wavegauge3loc + obj.phase(:,idir))));
+                        tmp11   = tmp.*real(exp(sqrt(-1).*(obj.w.*t - obj.k*(obj.wavegauge1loc(1).*cos(obj.waveDir(idir)*pi/180) + obj.wavegauge1loc(2).*sin(obj.waveDir(idir)*pi/180)) + obj.phase(:,idir))));
+                        tmp12   = tmp.*real(exp(sqrt(-1).*(obj.w.*t - obj.k*(obj.wavegauge2loc(1).*cos(obj.waveDir(idir)*pi/180) + obj.wavegauge2loc(2).*sin(obj.waveDir(idir)*pi/180)) + obj.phase(:,idir))));
+                        tmp13   = tmp.*real(exp(sqrt(-1).*(obj.w.*t - obj.k*(obj.wavegauge3loc(1).*cos(obj.waveDir(idir)*pi/180) + obj.wavegauge3loc(2).*sin(obj.waveDir(idir)*pi/180)) + obj.phase(:,idir))));
                         obj.waveAmpTime(i,1)    = t;
                         obj.waveAmpTime(i,2)    = obj.waveAmpTime(i,2) + sum(tmp1)*(1+cos(pi+pi*(i-1)/maxRampIT))/2;
                         obj.waveAmpTime1(i,1)   = t;
@@ -592,9 +758,9 @@ classdef waveClass<handle
                         t = (i-1)*dt;
                         tmp=sqrt(obj.A.*df*obj.waveSpread(idir));
                         tmp1  = tmp.*real(exp(sqrt(-1).*(obj.w.*t + obj.phase(:,idir))));
-                        tmp11 = tmp.*real(exp(sqrt(-1).*(obj.w.*t - obj.k*obj.wavegauge1loc + obj.phase(:,idir))));
-                        tmp12 = tmp.*real(exp(sqrt(-1).*(obj.w.*t - obj.k*obj.wavegauge2loc + obj.phase(:,idir))));
-                        tmp13 = tmp.*real(exp(sqrt(-1).*(obj.w.*t - obj.k*obj.wavegauge3loc + obj.phase(:,idir))));
+                        tmp11 = tmp.*real(exp(sqrt(-1).*(obj.w.*t - obj.k*(obj.wavegauge1loc(1).*cos(obj.waveDir(idir)*pi/180) + obj.wavegauge1loc(2).*sin(obj.waveDir(idir)*pi/180)) + obj.phase(:,idir))));
+                        tmp12 = tmp.*real(exp(sqrt(-1).*(obj.w.*t - obj.k*(obj.wavegauge2loc(1).*cos(obj.waveDir(idir)*pi/180) + obj.wavegauge2loc(2).*sin(obj.waveDir(idir)*pi/180)) + obj.phase(:,idir))));
+                        tmp13 = tmp.*real(exp(sqrt(-1).*(obj.w.*t - obj.k*(obj.wavegauge3loc(1).*cos(obj.waveDir(idir)*pi/180) + obj.wavegauge3loc(2).*sin(obj.waveDir(idir)*pi/180)) + obj.phase(:,idir))));
                         obj.waveAmpTime(i,1)    = t;
                         obj.waveAmpTime(i,2)    = obj.waveAmpTime(i,2) + sum(tmp1);
                         obj.waveAmpTime1(i,1)   = t;

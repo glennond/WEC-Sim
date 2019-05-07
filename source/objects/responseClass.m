@@ -91,7 +91,7 @@ classdef responseClass<handle
         function obj = loadMoorDyn(obj,numLines)            
             % Read MoorDyn outputs
             % load Lines.out
-            filename = './mooring/Lines.out';
+            filename = './Mooring/Lines.out';
             fid = fopen(filename, 'r');
             header = strsplit(fgetl(fid));
             data = dlmread(filename,'',1,0);
@@ -104,7 +104,7 @@ classdef responseClass<handle
             % load Line#.out
             for iline=1:numLines
                 eval(['obj.moorDyn.Line' num2str(iline) '=struct();']);
-                filename = ['./mooring/Line' num2str(iline) '.out'];
+                filename = ['./Mooring/Line' num2str(iline) '.out'];
                 try
                     fid = fopen(filename);
                     header = strsplit(strtrim(fgetl(fid)));
@@ -114,6 +114,7 @@ classdef responseClass<handle
                     for icol=1:ncol
                         eval(['obj.moorDyn.Line' num2str(iline) '.' header{icol} ' = data(:,' num2str(icol) ');']);
                     end
+                    fclose(fid);
                 catch
                     fprintf('\n No moorDyn *.out file saved for Line%u\n',iline); 
                 end
@@ -133,7 +134,7 @@ classdef responseClass<handle
             plot(t,pos,'k-',...
                 t,vel,'b-',...
                 t,acc,'r-')
-            legend('position','velocity','acceleration')
+            legend({'position','velocity','acceleration'})
             xlabel('Time (s)')
             ylabel('Response in (m) or (radians)')
             title(['body' num2str(bodyNum) ' (' obj.bodies(bodyNum).name ') ' DOF{comp} ' Response'])
